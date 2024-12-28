@@ -19,14 +19,14 @@ function renderUsers() {
     const userDiv = document.createElement("div");
     userDiv.className = "user";
     userDiv.innerHTML = `
-        <h3>${name}</h3>
-        <p>Points: ${data.points}</p>
-        <div class="actions">
-          <button onclick="addPoints('${name}', 1)">+1 Points</button>
-          <button onclick="addPoints('${name}', -1)">-1 Points</button>
-        </div>
-        <p>Récompenses: ${data.rewards.join(", ") || "Aucune"}</p>
-      `;
+      <h3>${name}</h3>
+      <p>Points: ${data.points}</p>
+      <div class="actions">
+        <button onclick="addPoints('${name}', 1)">+1 Points</button>
+        <button onclick="addPoints('${name}', -1)">-1 Points</button>
+      </div>
+      <p>Récompenses: ${data.rewards.join(", ") || "Aucune"}</p>
+    `;
     usersDiv.appendChild(userDiv);
   }
 }
@@ -37,10 +37,11 @@ function renderRewards() {
   rewardsDiv.innerHTML = "";
   rewardsCatalog.forEach((reward) => {
     const rewardDiv = document.createElement("div");
+    rewardDiv.className = "reward";
     rewardDiv.innerHTML = `
-        <p>${reward.name} - ${reward.cost} Points</p>
-        <button onclick="redeemReward('${reward.name}', ${reward.cost})">Échanger</button>
-      `;
+      <p>${reward.name} - ${reward.cost} Points</p>
+      <button onclick="redeemReward('${reward.name}', ${reward.cost})">Échanger</button>
+    `;
     rewardsDiv.appendChild(rewardDiv);
   });
 }
@@ -49,7 +50,9 @@ function renderRewards() {
 function addPoints(username, points) {
   if (users[username]) {
     users[username].points += points;
-    saveData(); // Sauvegarder les données après modification
+    if (users[username].points < 0) {
+      users[username].points = 0; // Empêcher les points négatifs
+    }
     renderUsers();
   } else {
     alert("Utilisateur introuvable !");
@@ -61,46 +64,21 @@ function redeemReward(rewardName, rewardCost) {
   const username = prompt(
     "Entrez le nom de l'utilisateur qui échange la récompense :"
   );
-  if (users[username] && users[username].points >= rewardCost) {
-    users[username].points -= rewardCost;
-    users[username].rewards.push(rewardName);
-    saveData(); // Sauvegarder les données après modification
-    renderUsers();
+  if (users[username]) {
+    if (users[username].points >= rewardCost) {
+      users[username].points -= rewardCost;
+      users[username].rewards.push(rewardName);
+      renderUsers();
+    } else {
+      alert("Points insuffisants !");
+    }
   } else {
-    alert("Points insuffisants ou utilisateur introuvable.");
+    alert("Utilisateur introuvable !");
   }
 }
 
-// Charger les données depuis le serveur
-async function loadData() {
-  try {
-    const response = await fetch("http://localhost:3000/data");
-    const data = await response.json();
-    Object.assign(users, data); // Charger les données dans `users`
-    renderUsers();
-    renderRewards();
-  } catch (error) {
-    console.error("Erreur lors du chargement des données :", error);
-  }
-}
-
-// Sauvegarder les données sur le serveur
-async function saveData() {
-  try {
-    await fetch("http://localhost:3000/data", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(users),
-    });
-    console.log("Données sauvegardées !");
-  } catch (error) {
-    console.error("Erreur lors de la sauvegarde des données :", error);
-  }
-}
-
-// Charger les données et initialiser la page au chargement
+// Initialiser la page
 document.addEventListener("DOMContentLoaded", () => {
-  loadData();
+  renderUsers();
+  renderRewards();
 });

@@ -13,7 +13,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  max-height: 100vh;
+  max-height: 100%;
 }
 header {
   background-color: #4caf50;
@@ -49,7 +49,7 @@ button:hover {
 }
 
 h2 {
-  margin: 2vh 0;
+  margin: 1vh 0;
 }
 
 p {
